@@ -11,40 +11,29 @@ class InventoryScreen extends StatefulWidget {
 
 class _InventoryScreenState extends State<InventoryScreen> {
   final InventoryService _inventoryService = InventoryService();
-
-  // Search-related variables
-  List<InventoryItem> _filteredItems = [];
   final TextEditingController _searchController = TextEditingController();
+  List<InventoryItem> _filteredItems = [];
 
   @override
   void initState() {
     super.initState();
 
-    // Example Data - Preloaded Inventory
-    _inventoryService.addItem(InventoryItem(id: '1', name: 'Soda', quantity: 10));
-    _inventoryService.addItem(InventoryItem(id: '2', name: 'Chips', quantity: 15));
-    _inventoryService.addItem(InventoryItem(id: '3', name: 'Candy', quantity: 20));
+    // Example Preloaded Inventory
+    _inventoryService.addItem(InventoryItem(id: '1', name: 'Chips', quantity: 5));
+    _inventoryService.addItem(InventoryItem(id: '2', name: 'Soda', quantity: 2));
+    _inventoryService.addItem(InventoryItem(id: '3', name: 'Candy', quantity: 10));
 
-    // Initialize filtered items
-    _filteredItems = _inventoryService.getItems();
-
-    // Add listener for search bar
-    _searchController.addListener(() {
-      _filterItems(_searchController.text);
-    });
+    _filteredItems = _inventoryService.getItems(); // Load initial items
   }
 
-  // Filter Items Function
-  void _filterItems(String query) {
-    final items = _inventoryService.getItems();
-    if (query.isEmpty) {
-      setState(() => _filteredItems = items);
-    } else {
-      setState(() {
-        _filteredItems = items.where((item) =>
-            item.name.toLowerCase().contains(query.toLowerCase())).toList();
-      });
-    }
+  // Search Function
+  void _searchItems(String query) {
+    setState(() {
+      _filteredItems = _inventoryService
+          .getItems()
+          .where((item) => item.name.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
   @override
@@ -52,7 +41,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inventory'),
-        backgroundColor: Colors.black, // Adjusted for DEMURE theme
+        backgroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -62,10 +51,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
             TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                labelText: 'Search',
+                labelText: 'Search Items',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
+              onChanged: _searchItems,
             ),
             const SizedBox(height: 16.0),
 
@@ -75,19 +65,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 itemCount: _filteredItems.length,
                 itemBuilder: (context, index) {
                   final item = _filteredItems[index];
+                  bool isLowStock = item.quantity < 5; // Low-stock alert
                   return Card(
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
                     child: ListTile(
-                      title: Text(item.name),
-                      subtitle: Text('Quantity: ${item.quantity}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            _inventoryService.deleteItem(item.id);
-                            _filterItems(_searchController.text);
-                          });
-                        },
+                      title: Text(
+                        item.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      subtitle: Text('Quantity: ${item.quantity}'),
+                      trailing: isLowStock
+                          ? const Icon(Icons.warning, color: Colors.red)
+                          : const Icon(Icons.check_circle, color: Colors.green),
                     ),
                   );
                 },
@@ -97,11 +87,5 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }
