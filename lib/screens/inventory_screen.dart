@@ -50,4 +50,33 @@ class _InventoryScreenState extends State<InventoryScreen> {
       ),
     );
   }
-}
+)
+return Scaffold(
+  appBar: AppBar(
+    title: const Text('Inventory'),
+  ),
+  body: ListView.builder(
+    itemCount: inventory.length,
+    itemBuilder: (context, index) {
+      final item = inventory[index];
+      return ListTile(
+        title: Text(item.productName),
+        subtitle: Text('\$${item.price.toStringAsFixed(2)} - ${item.quantity} left'),
+        onTap: () {
+          // Navigate to Product Details Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailsScreen(
+                productName: item.productName,
+                description: item.description,
+                price: item.price,
+                quantity: item.quantity,
+              ),
+            ),
+          );
+        },
+      );
+    },
+  ),
+);
