@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'screens/registration_screen.dart';
-
+import 'services/inventory_service.dart';
 void main() {
   runApp(const DemureApp());
 }
