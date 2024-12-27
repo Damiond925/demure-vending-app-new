@@ -10,103 +10,149 @@ class InventoryScreen extends StatefulWidget {
 
 class _InventoryScreenState extends State<InventoryScreen> {
   final InventoryService _inventoryService = InventoryService();
-
-  // Search and Sorting Variables
   String _searchQuery = '';
-  String _sortOption = 'Name';
+  String _filterCategory = 'All';
+  bool _sortAscending = true;
 
   @override
   void initState() {
     super.initState();
-
     // Example Data - Preloaded Inventory
-    _inventoryService.addItem(InventoryItem(id: '1', name: 'Chips', quantity: 10, price: 1.50));
-    _inventoryService.addItem(InventoryItem(id: '2', name: 'Soda', quantity: 8, price: 1.25));
-    _inventoryService.addItem(InventoryItem(id: '3', name: 'Candy', quantity: 15, price: 0.99));
+    _inventoryService.addItem(InventoryItem(id: '1', name: 'Item A', category: 'Snacks', quantity: 10));
+    _inventoryService.addItem(InventoryItem(id: '2', name: 'Item B', category: 'Drinks', quantity: 5));
+    _inventoryService.addItem(InventoryItem(id: '3', name: 'Item C', category: 'Snacks', quantity: 20));
+  }
+
+  List<InventoryItem> _getFilteredAndSortedItems() {
+    List<InventoryItem> items = _inventoryService.getItems();
+
+    // Filter by category
+    if (_filterCategory != 'All') {
+      items = items.where((item) => item.category == _filterCategory).toList();
+    }
+
+    // Apply search query
+    items = items.where((item) => item.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+
+    // Sort by name
+    items.sort((a, b) => _sortAscending
+        ? a.name.compareTo(b.name)
+        : b.name.compareTo(a.name));
+
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get all items
-    List<InventoryItem> inventory = _inventoryService.getItems();
-
-    // Apply Search Filter
-    final filteredItems = inventory.where((item) {
-      return item.name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
-
-    // Apply Sorting
-    if (_sortOption == 'Name') {
-      filteredItems.sort((a, b) => a.name.compareTo(b.name));
-    } else if (_sortOption == 'Price') {
-      filteredItems.sort((a, b) => a.price.compareTo(b.price));
-    } else if (_sortOption == 'Quantity') {
-      filteredItems.sort((a, b) => a.quantity.compareTo(b.quantity));
-    }
+    List<InventoryItem> inventory = _getFilteredAndSortedItems();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inventory'),
+        actions: [
+          // Search Bar
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: _InventorySearchDelegate(_inventoryService.getItems()),
+              );
+            },
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Search Bar
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
+      body: Column(
+        children: [
+          // Filter Dropdown
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DropdownButton<String>(
+              value: _filterCategory,
               onChanged: (value) {
                 setState(() {
-                  _searchQuery = value;
+                  _filterCategory = value!;
                 });
               },
+              items: ['All', 'Snacks', 'Drinks']
+                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .toList(),
             ),
-            const SizedBox(height: 10),
+          ),
 
-            // Sorting Dropdown
-            DropdownButton<String>(
-              value: _sortOption,
-              items: const [
-                DropdownMenuItem(value: 'Name', child: Text('Name')),
-                DropdownMenuItem(value: 'Price', child: Text('Price')),
-                DropdownMenuItem(value: 'Quantity', child: Text('Quantity')),
-              ],
-              onChanged: (value) {
+          // Sort Button
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: () {
                 setState(() {
-                  _sortOption = value!;
+                  _sortAscending = !_sortAscending;
                 });
               },
+              child: Text(_sortAscending ? 'Sort Ascending' : 'Sort Descending'),
             ),
-            const SizedBox(height: 10),
+          ),
 
-            // Inventory List
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredItems.length,
-                itemBuilder: (context, index) {
-                  final item = filteredItems[index];
-                  return ListTile(
-                    title: Text(item.name),
-                    subtitle: Text('Qty: ${item.quantity} | \$${item.price.toStringAsFixed(2)}'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() {
-                          _inventoryService.deleteItem(item.id);
-                        });
-                      },
-                    ),
-                  );
-                },
-              ),
+          // Inventory List
+          Expanded(
+            child: ListView.builder(
+              itemCount: inventory.length,
+              itemBuilder: (context, index) {
+                final item = inventory[index];
+                return ListTile(
+                  title: Text(item.name),
+                  subtitle: Text('Category: ${item.category}, Quantity: ${item.quantity}'),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+}
+
+class _InventorySearchDelegate extends SearchDelegate {
+  final List<InventoryItem> items;
+
+  _InventorySearchDelegate(this.items);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () => query = '',
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final results = items.where((item) => item.name.toLowerCase().contains(query.toLowerCase())).toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final item = results[index];
+        return ListTile(
+          title: Text(item.name),
+          subtitle: Text('Category: ${item.category}, Quantity: ${item.quantity}'),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return Container();
   }
 }
