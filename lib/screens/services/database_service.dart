@@ -1,56 +1,55 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:flutter/material.dart';
 
 class DatabaseService {
-  static Database? _database;
+  // Simulated database storage
+  final Map<String, dynamic> _data = {};
 
-  // Initialize Database
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+  // Add data to database
+  void addItem(String key, dynamic value) {
+    _data[key] = value;
+    print('Added item: $key');
   }
 
-  Future<Database> _initDatabase() async {
-    final path = join(await getDatabasesPath(), 'app_database.db');
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        // Create the inventory table
-        await db.execute('''
-          CREATE TABLE inventory(
-            id TEXT PRIMARY KEY,
-            name TEXT,
-            quantity INTEGER,
-            price REAL
-          )
-        ''');
-      },
-    );
+  // Get data from database
+  dynamic getItem(String key) {
+    return _data[key];
   }
 
-  // Insert data into the inventory table
-  Future<void> insertItem(Map<String, dynamic> item) async {
-    final db = await database;
-    await db.insert('inventory', item, conflictAlgorithm: ConflictAlgorithm.replace);
+  // Update data in database
+  void updateItem(String key, dynamic newValue) {
+    if (_data.containsKey(key)) {
+      _data[key] = newValue;
+      print('Updated item: $key');
+    } else {
+      print('Item not found: $key');
+    }
   }
 
-  // Retrieve all items
-  Future<List<Map<String, dynamic>>> getItems() async {
-    final db = await database;
-    return await db.query('inventory');
+  // Delete data from database
+  void deleteItem(String key) {
+    if (_data.containsKey(key)) {
+      _data.remove(key);
+      print('Deleted item: $key');
+    } else {
+      print('Item not found: $key');
+    }
   }
 
-  // Update an item
-  Future<void> updateItem(String id, Map<String, dynamic> updatedItem) async {
-    final db = await database;
-    await db.update('inventory', updatedItem, where: 'id = ?', whereArgs: [id]);
+  // List all data in database
+  void listItems() {
+    _data.forEach((key, value) {
+      print('$key: $value');
+    });
   }
 
-  // Delete an item
-  Future<void> deleteItem(String id) async {
-    final db = await database;
-    await db.delete('inventory', where: 'id = ?', whereArgs: [id]);
+  // Check if item exists
+  bool itemExists(String key) {
+    return _data.containsKey(key);
+  }
+
+  // Clear all data
+  void clearDatabase() {
+    _data.clear();
+    print('Database cleared.');
   }
 }
