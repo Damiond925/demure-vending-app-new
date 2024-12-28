@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
+import '../services/analytics_service.dart';
 
-class AnalyticsDashboardScreen extends StatelessWidget {
+class AnalyticsDashboardScreen extends StatefulWidget {
   const AnalyticsDashboardScreen({Key? key}) : super(key: key);
 
   @override
+  State<AnalyticsDashboardScreen> createState() => _AnalyticsDashboardScreenState();
+}
+
+class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
+  final AnalyticsService _analyticsService = AnalyticsService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Example Data (Replace this with actual data)
+    _analyticsService.addSale('Product A', 10);
+    _analyticsService.addSale('Product B', 5);
+    _analyticsService.addSale('Product C', 8);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Sample data for analytics
-    final data = [
-      {'category': 'Snacks', 'sales': 120},
-      {'category': 'Drinks', 'sales': 90},
-      {'category': 'Candy', 'sales': 60},
-    ];
+    final salesData = _analyticsService.getSalesData();
+    final totalSales = _analyticsService.getTotalSales();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Analytics Dashboard'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.black,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -23,31 +37,27 @@ class AnalyticsDashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Sales Overview',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Sales Analytics',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView.builder(
-                itemCount: data.length,
+                itemCount: salesData.keys.length,
                 itemBuilder: (context, index) {
-                  final item = data[index];
-                  return Card(
-                    elevation: 3,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      title: Text(item['category']!),
-                      trailing: Text(
-                        '${item['sales']} sales',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ),
+                  String product = salesData.keys.elementAt(index);
+                  int quantity = salesData[product]!;
+                  return ListTile(
+                    title: Text(product),
+                    subtitle: Text('Quantity Sold: $quantity'),
                   );
                 },
               ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Total Items Sold: $totalSales',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
