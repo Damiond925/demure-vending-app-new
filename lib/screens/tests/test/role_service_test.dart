@@ -2,34 +2,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:demure_vending_app/services/role_service.dart';
 
 void main() {
-  group('Role Service Test', () {
-    final roleService = RoleService();
+  late RoleService roleService;
 
-    test('Assign Role - Adds Role to User', () {
-      roleService.assignRole('user1', 'admin');
-      final roles = roleService.getRoles('user1');
-      expect(roles.contains('admin'), true);
-    });
+  setUp(() {
+    roleService = RoleService();
+  });
 
-    test('Remove Role - Removes Role from User', () {
-      roleService.assignRole('user1', 'admin');
-      roleService.removeRole('user1', 'admin');
-      final roles = roleService.getRoles('user1');
-      expect(roles.contains('admin'), false);
-    });
+  // Test Adding a New Role
+  test('Add a new role', () {
+    const role = 'Admin';
+    roleService.addRole(role);
 
-    test('Get Roles - Returns Empty List if No Roles', () {
-      final roles = roleService.getRoles('user2');
-      expect(roles.isEmpty, true);
-    });
+    expect(roleService.getRoles().contains(role), true);
+  });
 
-    test('Assign Multiple Roles - Stores All Roles', () {
-      roleService.assignRole('user1', 'admin');
-      roleService.assignRole('user1', 'editor');
-      final roles = roleService.getRoles('user1');
-      expect(roles.length, 2);
-      expect(roles.contains('admin'), true);
-      expect(roles.contains('editor'), true);
-    });
+  // Test Removing a Role
+  test('Remove an existing role', () {
+    const role = 'Admin';
+    roleService.addRole(role);
+    roleService.removeRole(role);
+
+    expect(roleService.getRoles().contains(role), false);
+  });
+
+  // Test Checking Role Existence
+  test('Check if role exists', () {
+    const role = 'Manager';
+    roleService.addRole(role);
+
+    expect(roleService.hasRole(role), true);
+  });
+
+  // Test Non-Existent Role
+  test('Check if non-existent role exists', () {
+    const role = 'Unknown';
+
+    expect(roleService.hasRole(role), false);
   });
 }
