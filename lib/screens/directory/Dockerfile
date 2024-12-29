@@ -6,3 +6,4 @@ COPY . .
 RUN flutter pub get
 
 CMD ["flutter", "run", "-d", "web-server"]
+
