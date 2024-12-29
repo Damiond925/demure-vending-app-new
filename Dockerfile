@@ -1,21 +1,20 @@
-# Use the official Flutter Docker image
 FROM cirrusci/flutter:latest
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the pubspec files first to resolve dependencies
+# Copy pubspec files first (for dependency caching)
 COPY pubspec.yaml .
+COPY pubspec.lock .
+
+# Install Flutter dependencies
 RUN flutter pub get
 
-# Generate the pubspec.lock file inside Docker
-RUN touch pubspec.lock
-
-# Copy the rest of the app files
+# Copy all files into the container
 COPY . .
 
 # Expose the web server port
 EXPOSE 8000
 
 # Start the application in web-server mode
-CMD ["flutter", "run", "-d", "web-server", "--web-port", "8000"]
+CMD ["flutter", "run", "-d", "web-server"]
