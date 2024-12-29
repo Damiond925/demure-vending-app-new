@@ -8,6 +8,7 @@ COPY pubspec.yaml .
 COPY pubspec.lock .
 
 # Install Flutter dependencies
+RUN flutter create .
 RUN flutter pub get
 
 # Copy all files into the container
