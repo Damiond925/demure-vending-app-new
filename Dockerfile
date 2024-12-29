@@ -1,21 +1,17 @@
+# Use the latest Flutter image
 FROM cirrusci/flutter:latest
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy pubspec files first (for dependency caching)
-COPY pubspec.yaml .
-COPY pubspec.lock .
+# Copy the project files into the container
+COPY . .
 
 # Install Flutter dependencies
-RUN flutter create .
 RUN flutter pub get
-
-# Copy all files into the container
-COPY . .
 
 # Expose the web server port
 EXPOSE 8000
 
-# Start the application in web-server mode
-CMD ["flutter", "run", "-d", "web-server"]
+# Start the Flutter application in web-server mode
+CMD ["flutter", "run", "-d", "web-server", "--web-port", "8000"]
